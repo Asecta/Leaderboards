@@ -2,6 +2,7 @@ package com.pandoaspen.leaderboards.providers.dataproviders;
 
 import com.pandoaspen.leaderboards.config.providers.ProviderConfig;
 import com.pandoaspen.leaderboards.providers.registry.PlayerData;
+import com.pandoaspen.leaderboards.providers.registry.PlayerScore;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -22,9 +23,9 @@ public interface IDataProvider {
 
     void collectData(OfflinePlayer player);
 
-    List<PlayerData> getTop(long since, int limit);
+    List<PlayerScore> getTop(long since, int limit);
 
-    PlayerData getByIndex(long since, int index);
+    PlayerScore getByIndex(long since, int index);
 
     PlayerData getDataFor(UUID uuid);
 

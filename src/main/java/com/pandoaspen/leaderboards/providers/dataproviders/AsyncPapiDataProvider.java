@@ -2,6 +2,7 @@ package com.pandoaspen.leaderboards.providers.dataproviders;
 
 import com.pandoaspen.leaderboards.config.providers.ProviderConfig;
 import com.pandoaspen.leaderboards.providers.registry.PlayerData;
+import com.pandoaspen.leaderboards.providers.registry.PlayerScore;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.List;
@@ -12,7 +13,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 
 public class AsyncPapiDataProvider extends PapiDataProvider {
 
-    private Map<Integer, List<PlayerData>> queryMap;
+    private Map<Integer, List<PlayerScore>> queryMap;
     private ThreadPoolExecutor executorService;
 
     public AsyncPapiDataProvider(JavaPlugin plugin, ProviderConfig providerConfig) {
@@ -28,7 +29,7 @@ public class AsyncPapiDataProvider extends PapiDataProvider {
     }
 
     @Override
-    public List<PlayerData> getTop(long since, int limit) {
+    public List<PlayerScore> getTop(long since, int limit) {
         int queryHash = hashCode(since, limit);
         if (queryMap.containsKey(queryHash)) {
             return queryMap.get(queryHash);

@@ -1,6 +1,7 @@
 package com.pandoaspen.leaderboards.providers.registry;
 
 import lombok.Data;
+import lombok.NonNull;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -9,47 +10,31 @@ import java.util.List;
 @Data
 public class PlayerData implements Iterable<DataEntry> {
 
-    private String playerName;
+    @NonNull private String playerName;
+    private final List<DataEntry> dataEntries = new ArrayList<>();
 
-    private final List<DataEntry> dataEntries;
-
-    public PlayerData(String playerName) {
-        this.playerName = playerName;
-        this.dataEntries = new ArrayList<>();
+    public int size() {
+        return dataEntries.size();
     }
 
-    public void register(double value) {
-        long currentTime = System.currentTimeMillis();
-
-        if (dataEntries.isEmpty()) {
-            dataEntries.add(new DataEntry(currentTime, 0));
-            return;
-        }
-
-        double last = dataEntries.get(dataEntries.size() - 1).getValue();
-
-        if (last == value) {
-            return;
-        }
-
-        dataEntries.add(new DataEntry(currentTime, value));
+    public boolean isEmpty() {
+        return dataEntries.isEmpty();
     }
 
-    public double getTotal() {
-        return dataEntries.get(dataEntries.size() - 1).getValue();
+    public boolean add(DataEntry dataEntry) {
+        return dataEntries.add(dataEntry);
     }
 
-    public double getSince(long epoch) {
-        double scoreBefore = 0;
+    public void clear() {
+        dataEntries.clear();
+    }
 
-        for (DataEntry dataEntry : dataEntries) {
-            if (dataEntry.getTime() > epoch) {
-                break;
-            }
-            scoreBefore = dataEntry.getValue();
-        }
+    public DataEntry get(int index) {
+        return dataEntries.get(index);
+    }
 
-        return getTotal() - scoreBefore;
+    public double sum() {
+        return dataEntries.stream().mapToDouble(DataEntry::getValue).sum();
     }
 
     @Override

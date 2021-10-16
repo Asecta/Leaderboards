@@ -26,8 +26,8 @@ data-providers:
 ##########################
 
 visualizers:
-  - type: HOLOGRAM
-
+#  - type: HOLOGRAM
+#
 
 
   - type: PLAYER

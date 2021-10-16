@@ -6,7 +6,6 @@ import co.aikar.commands.annotation.CommandCompletion;
 import co.aikar.commands.annotation.Subcommand;
 import com.pandoaspen.leaderboards.LeaderboardsPlugin;
 import com.pandoaspen.leaderboards.providers.dataproviders.IDataProvider;
-import com.pandoaspen.leaderboards.providers.registry.PlayerData;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -14,7 +13,6 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 
-import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @RequiredArgsConstructor
@@ -36,11 +34,11 @@ public class LeaderboardCommand extends BaseCommand {
 
         Entity entity = sender.getWorld().spawnEntity(sender.getLocation(), EntityType.ARMOR_STAND);
 
-        Bukkit.getScheduler().runTaskTimer(plugin, () -> {
-            PlayerData dataRegistry = provider.getByIndex(0, ranking - 1);
-            entity.setCustomNameVisible(true);
-            entity.setCustomName(dataRegistry.getPlayerName());
-        }, 20, 20);
+//        Bukkit.getScheduler().runTaskTimer(plugin, () -> {
+        //            PlayerData dataRegistry = provider.getByIndex(0, ranking - 1);
+        //            entity.setCustomNameVisible(true);
+        //            entity.setCustomName(dataRegistry.getPlayerName());
+        //        }, 20, 20);
     }
 
     @Subcommand("listproviders")
@@ -61,13 +59,11 @@ public class LeaderboardCommand extends BaseCommand {
         }
 
         Bukkit.broadcastMessage("==============================");
-        List<PlayerData> dataRegistries = provider.getTop(0, limit);
-        for (int i = 0; i < dataRegistries.size(); i++) {
-            PlayerData dataRegistry = dataRegistries.get(i);
-
-            //            OfflinePlayer player = /erver().getOfflinePlayer(dataRegistry.getOwnerUUID());
-            Bukkit.broadcastMessage(String.format("%d: %s - %.2f", i + 1, dataRegistry.getPlayerName(), dataRegistry.getTotal()));
-        }
+//        List<PlayerData> dataRegistries = provider.getTop(0, limit);
+//        for (int i = 0; i < dataRegistries.size(); i++) {
+//            PlayerData dataRegistry = dataRegistries.get(i);
+//            Bukkit.broadcastMessage(String.format("%d: %s - %.2f", i + 1, dataRegistry.getPlayerName(), dataRegistry.getTotal()));
+//        }
     }
 
     @Subcommand("offline")
