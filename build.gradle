@@ -1,0 +1,104 @@
+plugins {
+    id 'java-library'
+}
+
+group 'com.pandoaspen'
+version ''
+
+sourceCompatibility = 1.8
+tasks.withType(Jar) {
+    destinationDir = file("C:/Users/Jack/Desktop/snapcraft dev/servers/kitpvp_copy/plugins")
+}
+
+jar {
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}
+
+sourceSets {
+    api
+    main
+}
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+
+    maven { url "https://hub.spigotmc.org/nexus/content/repositories/snapshots/" }
+    maven { url "https://libraries.minecraft.net" }
+    maven { url 'https://jitpack.io' }
+    maven { url "https://repo.aikar.co/content/groups/aikar/" }
+
+    // MVdWPlaceholderAPI
+    maven { url "https://repo.mvdw-software.be/content/groups/public/" }
+
+    // Holographic Displays
+    maven { url "https://repo.codemc.io/repository/maven-public/" }
+
+    // ProtocolLib
+    maven { url "https://repo.dmulloy2.net/content/groups/public/" }
+}
+
+dependencies {
+    compileOnly 'org.projectlombok:lombok:1.18.8'
+    annotationProcessor 'org.projectlombok:lombok:1.18.8'
+
+    implementation 'co.aikar:acf-paper:0.5.0-SNAPSHOT'
+
+    compileOnly 'com.gmail.filoghost.holographicdisplays:holographicdisplays-api:2.4.0'
+    compileOnly 'com.comphenix.protocol:ProtocolLib-API:4.4.0'
+
+    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.12.4'
+    implementation group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-yaml', version: '2.12.4'
+
+    compileOnly fileTree(dir: 'libs', include: ['*.jar'])
+
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+    testCompile fileTree(dir: 'libs', include: ['*.jar'])
+
+
+}
+
+//def localDeployPath = "C:/Users/Jack/Desktop/snapcraft dev/servers/kitpvp_copy/plugins"
+//
+//tasks.register('localDeploy', Copy) {
+//    duplicatesStrategy 'exclude'
+//
+//    def file = file("build/libs/").listFiles()[0]
+//
+//    def oldName = file.getName()
+//    def newName = oldName.substring(0, oldName.indexOf("-")) + ".jar"
+//
+//    from file.getPath()
+//    into localDeployPath
+//
+//    rename { String fileName ->
+//        fileName.replace(oldName, newName)
+//    }
+//}
+//
+//def getVerProps() {
+//    def versionFile = file('version.properties')
+//    Properties properties = new Properties()
+//    properties.load(new FileInputStream(versionFile))
+//    return properties
+//}
+//
+//tasks.register('incrVer') {
+//    Properties properties = getVerProps()
+//    properties['BUILD_VERSION'] = (properties['BUILD_VERSION'].toInteger() + 1).toString()
+//    properties.store(file('version.properties').newWriter(), null);
+//}
+//
+//task preBuild {
+//    Properties properties = getVerProps()
+//
+//    def majorVersion = properties["MAJOR_VERSION"].toInteger()
+//    def minorVersion = properties["MINOR_VERSION"].toInteger()
+//    def buildVersion = properties['BUILD_VERSION'].toInteger()
+//
+//    version = String.format("v%d.%d.%d", majorVersion, minorVersion, buildVersion)
+//}
+//
+//build.dependsOn preBuild
