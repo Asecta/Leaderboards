@@ -11,7 +11,6 @@ import com.pandoaspen.leaderboards.config.visualizers.NPCConfig;
 import com.pandoaspen.leaderboards.config.visualizers.ProviderVisualizerConfig;
 import com.pandoaspen.leaderboards.config.visualizers.VisualizerConfig;
 import com.pandoaspen.leaderboards.providers.dataproviders.IDataProvider;
-import com.pandoaspen.leaderboards.providers.registry.PlayerData;
 import com.pandoaspen.leaderboards.providers.registry.PlayerScore;
 import com.pandoaspen.leaderboards.visualizer.AbstractVisualizer;
 import net.citizensnpcs.api.CitizensAPI;
@@ -114,7 +113,9 @@ public class PlayerVisualizer extends AbstractVisualizer {
             PlayerScore playerScore = top.get(npcConfig.getRank() - 1);
             String playerName = playerScore.getName();
 
-            spawnNPC(providerVisualizerConfig, npcConfig, playerName, String.format(scoreFormat, playerScore.getValue()));
+            String val = String.format(scoreFormat, playerScore.getValue());
+
+            spawnNPC(providerVisualizerConfig, npcConfig, playerName, val);
             sendTeamPacket(playerName);
         }
 

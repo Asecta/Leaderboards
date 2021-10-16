@@ -6,7 +6,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 
 public class DataRegistry extends JsonDataSerializer {
@@ -31,11 +30,12 @@ public class DataRegistry extends JsonDataSerializer {
     public void addEntry(UUID uuid, String name, double value) {
         PlayerData playerData = dataRegistryMap.computeIfAbsent(uuid, x -> new PlayerData(name));
         List<DataEntry> dataEntries = playerData.getDataEntries();
-
         long currentTime = System.currentTimeMillis();
 
+        if (value == 0) return;
+
         if (dataEntries.isEmpty()) {
-            dataEntries.add(new DataEntry(currentTime, 0));
+            dataEntries.add(new DataEntry(currentTime, value));
             return;
         }
 
@@ -62,16 +62,97 @@ public class DataRegistry extends JsonDataSerializer {
     }
 
     private PlayerScore getScore(UUID uuid, PlayerData data, long epoch) {
-        return new PlayerScore(uuid, data.getPlayerName(), epoch, getSince(data, epoch));
+        double val = getSince(data, epoch);
+        if (val <= 0) return null;
+        return new PlayerScore(uuid, data.getPlayerName(), epoch, val);
     }
 
     public List<PlayerScore> getTop(long since, int limit) {
         long epoch = System.currentTimeMillis() - since;
-        System.out.println(new Date(epoch));
-        return dataRegistryMap.entrySet().parallelStream().filter(entry -> !entry.getValue().isEmpty()).map(entry -> getScore(entry.getKey(), entry.getValue(), epoch)).sorted().limit(limit).collect(Collectors.toList());
 
-        //        Function<PlayerData, Double> valueFunc = d -> -getSince(d, System.currentTimeMillis() - since);
-        //        return CollectionUtils.resolveSort(dataRegistryMap.values(), valueFunc, v -> 0 < -v, limit);
+        PlayerScore[] result = new PlayerScore[limit];
+        for (int i = 0; i < limit; i++) {
+            result[i] = new PlayerScore(new UUID(0, 0), "", since, 0);
+        }
+
+        double minAccept = 0;
+        boolean accepting = false;
+        int count = 0;
+
+
+        for (Map.Entry<UUID, PlayerData> entry : dataRegistryMap.entrySet()) {
+            if (entry.getValue().isEmpty()) continue;
+            PlayerScore score = getScore(entry.getKey(), entry.getValue(), epoch);
+            if (score == null) continue;
+
+            if (!accepting) {
+                int index = Arrays.binarySearch(result, score);
+                if (index < 0) index = ~index;
+                System.arraycopy(result, index, result, index + 1, limit - index - 1);
+                result[index] = score;
+
+                if (++count == limit) {
+                    minAccept = result[limit - 1].getValue();
+                    accepting = true;
+                }
+                continue;
+            }
+
+            if (score.getValue() > minAccept) {
+                int index = Arrays.binarySearch(result, score);
+                if (index < 0) index = ~index;
+                System.arraycopy(result, index, result, index + 1, limit - index - 1);
+                result[index] = score;
+                minAccept = result[limit - 1].getValue();
+            }
+        }
+
+
+
+        return Arrays.asList(result);
+
+        //        List<PlayerScore> result = new ArrayList<PlayerScore>() {
+        //            public boolean add(PlayerScore mt) {
+        //                int index = Collections.binarySearch(this, mt);
+        //                if (index < 0) index = ~index;
+        //                super.add(index, mt);
+        //                return true;
+        //            }
+        //        };
+        //
+        //        double minAccept = 0;
+        //        boolean accepting = false;
+        //        int count = 0;
+        //        for (Map.Entry<UUID, PlayerData> entry : dataRegistryMap.entrySet()) {
+        //            if (entry.getValue().isEmpty()) continue;
+        //            PlayerScore score = getScore(entry.getKey(), entry.getValue(), epoch);
+        //            if (score == null) continue;
+        //
+        //            if (!accepting) {
+        //                result.add(score);
+        //                if (count++ == limit){
+        //                    minAccept = result.get(limit).getValue();
+        //                    accepting = true;
+        //                }
+        //                continue;
+        //            }
+        //
+        //            if (score.getValue() > minAccept) {
+        //                result.add(score);
+        //                result.remove(limit + 1);
+        //                minAccept = result.get(limit).getValue();
+        //            }
+        //        }
+        //        return result;
+
+
+        //                return dataRegistryMap.entrySet().parallelStream()
+        //                        .filter(entry -> !entry.getValue().isEmpty())
+        //                        .map(entry -> getScore(entry.getKey(), entry.getValue(), epoch))
+        //                        .filter(Objects::nonNull)
+        //                        .sorted()
+        //                        .limit(limit)
+        //                        .collect(Collectors.toList());
     }
 
     public PlayerScore getByIndex(long since, int index) {

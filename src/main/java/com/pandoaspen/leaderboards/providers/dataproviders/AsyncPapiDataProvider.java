@@ -1,7 +1,6 @@
 package com.pandoaspen.leaderboards.providers.dataproviders;
 
 import com.pandoaspen.leaderboards.config.providers.ProviderConfig;
-import com.pandoaspen.leaderboards.providers.registry.PlayerData;
 import com.pandoaspen.leaderboards.providers.registry.PlayerScore;
 import org.bukkit.plugin.java.JavaPlugin;
 
