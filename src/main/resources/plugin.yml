@@ -1,0 +1,6 @@
+name: Leaderboards
+main: com.pandoaspen.leaderboards.LeaderboardsPlugin
+version: 1.0
+depend:
+  - HolographicDisplays
+  - Citizens
