@@ -1,35 +1,30 @@
 package com.pandoaspen.leaderboards.providers.registry;
 
-import com.pandoaspen.leaderboards.providers.serializers.JsonDataSerializer;
-import com.pandoaspen.leaderboards.utils.CollectionUtils;
-import lombok.Getter;
-import org.bukkit.plugin.java.JavaPlugin;
+import lombok.Data;
 
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-import java.util.UUID;
-import java.util.function.Function;
 
+@Data
+public class DataRegistry implements Iterable<DataEntry> {
 
-public class DataRegistry extends JsonDataSerializer {
+    private String playerName;
 
-    private TreeMap<UUID, PlayerData> dataRegistryMap;
-    @Getter private String name;
+    private final List<DataEntry> dataEntries;
 
-    public DataRegistry(JavaPlugin plugin, String name) {
-        super(plugin);
-        this.name = name;
+    public DataRegistry(String playerName) {
+        this.playerName = playerName;
+        this.dataEntries = new ArrayList<>();
     }
 
-    public void addEntry(UUID uuid, String name, double value) {
-        PlayerData playerData = dataRegistryMap.computeIfAbsent(uuid, x -> new PlayerData(name));
-        List<DataEntry> dataEntries = playerData.getDataEntries();
-
+    public void register(double value) {
         long currentTime = System.currentTimeMillis();
 
+        if (value == 0) return;
+
         if (dataEntries.isEmpty()) {
-            dataEntries.add(new DataEntry(currentTime, 0));
+            dataEntries.add(new DataEntry(currentTime, value));
             return;
         }
 
@@ -42,44 +37,26 @@ public class DataRegistry extends JsonDataSerializer {
         dataEntries.add(new DataEntry(currentTime, value));
     }
 
-    public double getSince(UUID uuid, long epoch) {
-        if (!dataRegistryMap.containsKey(uuid)) {
-            return 0;
-        }
+    public double getTotal() {
+        if (dataEntries.isEmpty()) return 0;
+        return dataEntries.get(dataEntries.size() - 1).getValue();
+    }
 
-        PlayerData playerData = dataRegistryMap.get(uuid);
-        List<DataEntry> dataEntries = playerData.getDataEntries();
-
+    public double getSince(long epoch) {
         double scoreBefore = 0;
-        double scoreTotal = 0;
 
         for (DataEntry dataEntry : dataEntries) {
-            if (dataEntry.getTime() < epoch) {
-                scoreBefore = dataEntry.getValue();
+            if (dataEntry.getTime() > epoch) {
+                break;
             }
-            scoreTotal += dataEntry.getValue();
+            scoreBefore = dataEntry.getValue();
         }
 
-        return scoreTotal - scoreBefore;
+        return getTotal() - scoreBefore;
     }
 
-
-    public List<PlayerData> getTop(long since, int limit) {
-        Function<PlayerData, Double> valueFunc = d -> -d.getSince(System.currentTimeMillis() - since);
-        return CollectionUtils.resolveSort(dataRegistryMap.values(), valueFunc, v -> 0 < -v, limit);
+    @Override
+    public Iterator<DataEntry> iterator() {
+        return dataEntries.iterator();
     }
-
-    public PlayerData getByIndex(long since, int index) {
-        return getTop(since, index + 1).get(index);
-    }
-
-    public PlayerData getDataFor(UUID uuid) {
-        return dataRegistryMap.get(uuid);
-    }
-
-    public Map<UUID, PlayerData> getDatabase() {
-        return dataRegistryMap;
-    }
-
-
 }

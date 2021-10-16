@@ -13,7 +13,8 @@ import java.util.function.BiFunction;
 @RequiredArgsConstructor
 @Getter
 public enum ProviderType {
-    PAPI("PAPI", (plugin, config) -> new AsyncPapiDataProvider(plugin, config));
+    ASYNC_PAPI("ASYNC_PAPI", (plugin, config) -> new AsyncPapiDataProvider(plugin, config)),
+    PAPI("PAPI", (plugin, config) -> new PapiDataProvider(plugin, config));
 
     private final String name;
     private final BiFunction<LeaderboardsPlugin, ProviderConfig, IDataProvider> instantiator;

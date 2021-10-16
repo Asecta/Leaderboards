@@ -1,6 +1,6 @@
 package com.pandoaspen.leaderboards.providers.serializers;
 
-import com.pandoaspen.leaderboards.providers.registry.PlayerData;
+import com.pandoaspen.leaderboards.providers.registry.DataRegistry;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
@@ -12,9 +12,9 @@ public interface IDataSerializer {
 
     String getName();
 
-    Map<UUID, PlayerData> readData() throws IOException;
+    Map<UUID, DataRegistry> readData() throws IOException;
 
-    void writeData(Map<UUID, PlayerData> data) throws IOException;
+    void writeData(Map<UUID, DataRegistry> data) throws IOException;
 
     String getExtention();
 

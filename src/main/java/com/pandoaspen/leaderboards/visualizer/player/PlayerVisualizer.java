@@ -11,7 +11,7 @@ import com.pandoaspen.leaderboards.config.visualizers.NPCConfig;
 import com.pandoaspen.leaderboards.config.visualizers.ProviderVisualizerConfig;
 import com.pandoaspen.leaderboards.config.visualizers.VisualizerConfig;
 import com.pandoaspen.leaderboards.providers.dataproviders.IDataProvider;
-import com.pandoaspen.leaderboards.providers.registry.PlayerData;
+import com.pandoaspen.leaderboards.providers.registry.DataRegistry;
 import com.pandoaspen.leaderboards.visualizer.AbstractVisualizer;
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.event.DespawnReason;
@@ -90,21 +90,22 @@ public class PlayerVisualizer extends AbstractVisualizer {
         long since = providerVisualizerConfig.getDuration().getMillis();
         int max = getVisualizerConfig().getNpcs().stream().mapToInt(v -> v.getRank()).max().getAsInt() + 1;
 
-        //        long start = System.nanoTime();
+        long start = System.nanoTime();
 
         IDataProvider dataProvider = getPlugin().getProviderManager().getProvider(providerVisualizerConfig.getName());
-        List<PlayerData> top = dataProvider.getTop(since, max);
+        List<DataRegistry> top = dataProvider.getTop(since, max);
 
-        //        double timediff = (System.nanoTime() - start) / 1000000d;
-        //        int dpCount = dataProvider.getDatabase().values().stream().mapToInt(d -> d.getDataEntries().size()).sum();
-        //        Bukkit.broadcastMessage(String.format("Took %.4f ms to update (%d) (%s) (%s)", timediff, dpCount, dataProvider.getName(), providerVisualizerConfig.getDuration().getDurationString()));
+
+        double timediff = (System.nanoTime() - start) / 1000000d;
+        int dpCount = dataProvider.getDatabase().values().stream().mapToInt(d -> d.getDataEntries().size()).sum();
+        Bukkit.broadcastMessage(String.format("Took %.4f ms to update (%d) (%s) (%s)", timediff, dpCount, dataProvider.getName(), providerVisualizerConfig.getDuration().getDurationString()));
 
         String scoreFormat = dataProvider.getProviderConfig().getScoreFormat();
 
         for (NPCConfig npcConfig : getVisualizerConfig().getNpcs()) {
             if (npcConfig.getRank() > top.size()) continue;
 
-            PlayerData dataRegistry = top.get(npcConfig.getRank() - 1);
+            DataRegistry dataRegistry = top.get(npcConfig.getRank() - 1);
             String playerName = dataRegistry.getPlayerName();
 
             spawnNPC(providerVisualizerConfig, npcConfig, playerName, String.format(scoreFormat, dataRegistry.getSince(since)));

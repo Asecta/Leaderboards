@@ -1,7 +1,7 @@
 package com.pandoaspen.leaderboards.providers.dataproviders;
 
 import com.pandoaspen.leaderboards.config.providers.ProviderConfig;
-import com.pandoaspen.leaderboards.providers.registry.PlayerData;
+import com.pandoaspen.leaderboards.providers.registry.DataRegistry;
 import com.pandoaspen.leaderboards.utils.CollectionUtils;
 import lombok.Getter;
 import me.clip.placeholderapi.PlaceholderAPI;
@@ -24,7 +24,7 @@ public class PapiDataProvider extends AbstractProvider {
 
     private boolean available = false;
 
-    private TreeMap<UUID, PlayerData> dataRegistryMap;
+    private TreeMap<UUID, DataRegistry> dataRegistryMap;
 
     public PapiDataProvider(JavaPlugin plugin, ProviderConfig providerConfig) {
         super(plugin, providerConfig);
@@ -69,28 +69,28 @@ public class PapiDataProvider extends AbstractProvider {
         double data = parsePlaceholder(player);
         UUID uuid = player.getUniqueId();
         String lastName = player.getName();
-        PlayerData playerData = dataRegistryMap.computeIfAbsent(uuid, x -> new PlayerData(lastName));
+        DataRegistry playerData = dataRegistryMap.computeIfAbsent(uuid, x -> new DataRegistry(lastName));
         playerData.register(data);
     }
 
 
     @Override
-    public List<PlayerData> getTop(long since, int limit) {
+    public List<DataRegistry> getTop(long since, int limit) {
         return CollectionUtils.resolveSort(dataRegistryMap.values(), d -> -d.getSince(System.currentTimeMillis() - since), v -> 0 < -v, limit);
     }
 
     @Override
-    public PlayerData getByIndex(long since, int index) {
+    public DataRegistry getByIndex(long since, int index) {
         return getTop(since, index + 1).get(index);
     }
 
     @Override
-    public PlayerData getDataFor(UUID uuid) {
+    public DataRegistry getDataFor(UUID uuid) {
         return dataRegistryMap.get(uuid);
     }
 
     @Override
-    public Map<UUID, PlayerData> getDatabase() {
+    public Map<UUID, DataRegistry> getDatabase() {
         return dataRegistryMap;
     }
 }
