@@ -4,7 +4,7 @@ import com.pandoaspen.leaderboards.LeaderboardsPlugin;
 import com.pandoaspen.leaderboards.config.providers.ProviderConfig;
 import com.pandoaspen.leaderboards.config.providers.TriggerConfig;
 import com.pandoaspen.leaderboards.providers.dataproviders.IDataProvider;
-import com.pandoaspen.leaderboards.providers.registry.DataRegistry;
+import com.pandoaspen.leaderboards.providers.registry.PlayerData;
 import com.pandoaspen.leaderboards.utils.CollectionUtils;
 import lombok.Getter;
 import org.bukkit.entity.Player;
@@ -75,7 +75,7 @@ public class ProviderManager {
 
     public void updatePlayerNames(Player player) {
         dataProviders.forEach(dp -> {
-            DataRegistry dataRegistry = dp.getDataFor(player.getUniqueId());
+            PlayerData dataRegistry = dp.getDataFor(player.getUniqueId());
             if (dataRegistry != null) {
                 dataRegistry.setPlayerName(player.getName());
             }

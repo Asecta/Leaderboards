@@ -7,7 +7,7 @@ import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import com.pandoaspen.leaderboards.providers.registry.DataEntry;
-import com.pandoaspen.leaderboards.providers.registry.DataRegistry;
+import com.pandoaspen.leaderboards.providers.registry.PlayerData;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang.ObjectUtils;
@@ -34,7 +34,7 @@ public abstract class JsonDataSerializer implements IDataSerializer {
         gsonBuilder.registerTypeAdapter(DataEntry.class, new TypeAdapter<DataEntry>() {
             @Override
             public void write(JsonWriter jsonWriter, DataEntry dataEntry) throws IOException {
-                jsonWriter.value(String.format("%d %s", dataEntry.getTime(), dataEntry.getValue()));
+                jsonWriter.value(String.format("%d %f", dataEntry.getTime(), dataEntry.getValue()));
             }
 
             @Override
@@ -52,16 +52,17 @@ public abstract class JsonDataSerializer implements IDataSerializer {
     @Getter private final JavaPlugin plugin;
 
     @Override
-    public Map<UUID, DataRegistry> readData() throws IOException {
+    public Map<UUID, PlayerData> readData() throws IOException {
         File file = getDataFile(false);
         if (!file.exists()) return new HashMap<>();
         String json = new String(Files.readAllBytes(file.toPath()));
-        Type type = new TypeToken<Map<UUID, DataRegistry>>() {}.getType();
+        Type type = new TypeToken<Map<UUID, PlayerData>>() {
+        }.getType();
         return GSON.fromJson(json, type);
     }
 
     @Override
-    public void writeData(Map<UUID, DataRegistry> data) throws IOException {
+    public void writeData(Map<UUID, PlayerData> data) throws IOException {
         byte[] bytes = GSON.toJson(data).getBytes();
         File file = getDataFile(true);
         FileOutputStream fileOutputStream = new FileOutputStream(file);
