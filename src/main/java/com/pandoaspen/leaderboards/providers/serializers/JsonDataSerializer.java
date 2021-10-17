@@ -10,11 +10,10 @@ import com.pandoaspen.leaderboards.providers.registry.DataEntry;
 import com.pandoaspen.leaderboards.providers.registry.DataRegistry;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang.ObjectUtils;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.util.HashMap;
@@ -68,7 +67,36 @@ public abstract class JsonDataSerializer implements IDataSerializer {
         FileOutputStream fileOutputStream = new FileOutputStream(file);
         fileOutputStream.write(bytes);
         fileOutputStream.close();
+
+        writeBinary(data);
     }
+
+    public void writeBinary(Map<UUID, PlayerData> data) throws IOException {
+        File file = new File(getDataFile(false).getParentFile(), getName() + ".bin");
+
+        if (!file.exists()) {
+            file.createNewFile();
+        }
+
+        FileOutputStream fileOutputStream = new FileOutputStream(file);
+        DataOutputStream out = new DataOutputStream(fileOutputStream);
+
+        for (Map.Entry<UUID, PlayerData> entry : data.entrySet()) {
+            UUID uuid = entry.getKey();
+            PlayerData playerData = entry.getValue();
+
+            out.writeLong(uuid.getLeastSignificantBits());
+            out.writeLong(uuid.getMostSignificantBits());
+            out.writeUTF(playerData.getPlayerName());
+            out.writeInt(data.size());
+
+            for (DataEntry dataEntry : playerData) {
+                out.writeLong(dataEntry.getTime());
+                out.writeDouble(dataEntry.getValue());
+            }
+        }
+    }
+
 
     @Override
     public String getExtention() {

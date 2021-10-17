@@ -5,6 +5,7 @@ import com.google.gson.annotations.SerializedName;
 import com.pandoaspen.leaderboards.utils.Duration;
 import com.pandoaspen.leaderboards.visualizer.VisualizerType;
 import lombok.Getter;
+import org.bukkit.Location;
 
 import java.util.List;
 
@@ -19,5 +20,8 @@ public class VisualizerConfig {
     @SerializedName("watch-player") private boolean watchPlayer;
     @SerializedName("watch-distance") private int watchDistance;
     @SerializedName("npcs") private List<NPCConfig> npcs;
+    @SerializedName("location") private Location location;
+
+
 
 }

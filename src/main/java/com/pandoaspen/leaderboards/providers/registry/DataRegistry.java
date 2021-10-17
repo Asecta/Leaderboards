@@ -1,24 +1,35 @@
 package com.pandoaspen.leaderboards.providers.registry;
 
-import lombok.Data;
+import com.pandoaspen.leaderboards.providers.serializers.JsonDataSerializer;
+import lombok.Getter;
+import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.io.IOException;
+import java.util.*;
 
-@Data
-public class DataRegistry implements Iterable<DataEntry> {
 
-    private String playerName;
+public class DataRegistry extends JsonDataSerializer {
 
-    private final List<DataEntry> dataEntries;
+    private TreeMap<UUID, PlayerData> dataRegistryMap;
+    @Getter private String name;
 
-    public DataRegistry(String playerName) {
-        this.playerName = playerName;
-        this.dataEntries = new ArrayList<>();
+    public DataRegistry(JavaPlugin plugin, String name) {
+        super(plugin);
+        this.name = name;
     }
 
-    public void register(double value) {
+
+    public void load() throws IOException {
+        this.dataRegistryMap = new TreeMap<>(super.readData());
+    }
+
+    public void save() throws IOException {
+        super.writeData(dataRegistryMap);
+    }
+
+    public void addEntry(UUID uuid, String name, double value) {
+        PlayerData playerData = dataRegistryMap.computeIfAbsent(uuid, x -> new PlayerData(name));
+        List<DataEntry> dataEntries = playerData.getDataEntries();
         long currentTime = System.currentTimeMillis();
 
         if (value == 0) return;
@@ -37,26 +48,124 @@ public class DataRegistry implements Iterable<DataEntry> {
         dataEntries.add(new DataEntry(currentTime, value));
     }
 
-    public double getTotal() {
-        if (dataEntries.isEmpty()) return 0;
-        return dataEntries.get(dataEntries.size() - 1).getValue();
-    }
-
-    public double getSince(long epoch) {
+    private double getSince(PlayerData playerData, long epoch) {
         double scoreBefore = 0;
 
-        for (DataEntry dataEntry : dataEntries) {
+        for (DataEntry dataEntry : playerData) {
             if (dataEntry.getTime() > epoch) {
                 break;
             }
             scoreBefore = dataEntry.getValue();
         }
 
-        return getTotal() - scoreBefore;
+        return playerData.get(playerData.size() - 1).getValue() - scoreBefore;
     }
 
-    @Override
-    public Iterator<DataEntry> iterator() {
-        return dataEntries.iterator();
+    private PlayerScore getScore(UUID uuid, PlayerData data, long epoch) {
+        double val = getSince(data, epoch);
+        if (val <= 0) return null;
+        return new PlayerScore(uuid, data.getPlayerName(), epoch, val);
     }
+
+    public List<PlayerScore> getTop(long since, int limit) {
+        long epoch = System.currentTimeMillis() - since;
+
+        PlayerScore[] result = new PlayerScore[limit];
+        for (int i = 0; i < limit; i++) {
+            result[i] = new PlayerScore(new UUID(0, 0), "", since, 0);
+        }
+
+        double minAccept = 0;
+        boolean accepting = false;
+        int count = 0;
+
+
+        for (Map.Entry<UUID, PlayerData> entry : dataRegistryMap.entrySet()) {
+            if (entry.getValue().isEmpty()) continue;
+            PlayerScore score = getScore(entry.getKey(), entry.getValue(), epoch);
+            if (score == null) continue;
+
+            if (!accepting) {
+                int index = Arrays.binarySearch(result, score);
+                if (index < 0) index = ~index;
+                System.arraycopy(result, index, result, index + 1, limit - index - 1);
+                result[index] = score;
+
+                if (++count == limit) {
+                    minAccept = result[limit - 1].getValue();
+                    accepting = true;
+                }
+                continue;
+            }
+
+            if (score.getValue() > minAccept) {
+                int index = Arrays.binarySearch(result, score);
+                if (index < 0) index = ~index;
+                System.arraycopy(result, index, result, index + 1, limit - index - 1);
+                result[index] = score;
+                minAccept = result[limit - 1].getValue();
+            }
+        }
+
+
+
+        return Arrays.asList(result);
+
+        //        List<PlayerScore> result = new ArrayList<PlayerScore>() {
+        //            public boolean add(PlayerScore mt) {
+        //                int index = Collections.binarySearch(this, mt);
+        //                if (index < 0) index = ~index;
+        //                super.add(index, mt);
+        //                return true;
+        //            }
+        //        };
+        //
+        //        double minAccept = 0;
+        //        boolean accepting = false;
+        //        int count = 0;
+        //        for (Map.Entry<UUID, PlayerData> entry : dataRegistryMap.entrySet()) {
+        //            if (entry.getValue().isEmpty()) continue;
+        //            PlayerScore score = getScore(entry.getKey(), entry.getValue(), epoch);
+        //            if (score == null) continue;
+        //
+        //            if (!accepting) {
+        //                result.add(score);
+        //                if (count++ == limit){
+        //                    minAccept = result.get(limit).getValue();
+        //                    accepting = true;
+        //                }
+        //                continue;
+        //            }
+        //
+        //            if (score.getValue() > minAccept) {
+        //                result.add(score);
+        //                result.remove(limit + 1);
+        //                minAccept = result.get(limit).getValue();
+        //            }
+        //        }
+        //        return result;
+
+
+        //                return dataRegistryMap.entrySet().parallelStream()
+        //                        .filter(entry -> !entry.getValue().isEmpty())
+        //                        .map(entry -> getScore(entry.getKey(), entry.getValue(), epoch))
+        //                        .filter(Objects::nonNull)
+        //                        .sorted()
+        //                        .limit(limit)
+        //                        .collect(Collectors.toList());
+    }
+
+    public PlayerScore getByIndex(long since, int index) {
+        return getTop(since, index + 1).get(index);
+    }
+
+    public PlayerData getDataFor(UUID uuid) {
+        return dataRegistryMap.get(uuid);
+    }
+
+    public Map<UUID, PlayerData> getDatabase() {
+        return dataRegistryMap;
+    }
+
+
 }

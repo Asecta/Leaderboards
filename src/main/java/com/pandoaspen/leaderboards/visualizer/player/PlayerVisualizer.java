@@ -11,7 +11,7 @@ import com.pandoaspen.leaderboards.config.visualizers.NPCConfig;
 import com.pandoaspen.leaderboards.config.visualizers.ProviderVisualizerConfig;
 import com.pandoaspen.leaderboards.config.visualizers.VisualizerConfig;
 import com.pandoaspen.leaderboards.providers.dataproviders.IDataProvider;
-import com.pandoaspen.leaderboards.providers.registry.DataRegistry;
+import com.pandoaspen.leaderboards.providers.registry.PlayerScore;
 import com.pandoaspen.leaderboards.visualizer.AbstractVisualizer;
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.event.DespawnReason;
@@ -93,8 +93,13 @@ public class PlayerVisualizer extends AbstractVisualizer {
         long start = System.nanoTime();
 
         IDataProvider dataProvider = getPlugin().getProviderManager().getProvider(providerVisualizerConfig.getName());
-        List<DataRegistry> top = dataProvider.getTop(since, max);
 
+        if (dataProvider == null) {
+            System.out.println(String.format("Data provider %s is not registered (%s)", providerVisualizerConfig.getName(), getPlugin().getProviderManager().getProviderNames()));
+            return;
+        }
+
+        List<PlayerScore> top = dataProvider.getTop(since, max);
 
         double timediff = (System.nanoTime() - start) / 1000000d;
         int dpCount = dataProvider.getDatabase().values().stream().mapToInt(d -> d.getDataEntries().size()).sum();
@@ -105,10 +110,12 @@ public class PlayerVisualizer extends AbstractVisualizer {
         for (NPCConfig npcConfig : getVisualizerConfig().getNpcs()) {
             if (npcConfig.getRank() > top.size()) continue;
 
-            DataRegistry dataRegistry = top.get(npcConfig.getRank() - 1);
-            String playerName = dataRegistry.getPlayerName();
+            PlayerScore playerScore = top.get(npcConfig.getRank() - 1);
+            String playerName = playerScore.getName();
 
-            spawnNPC(providerVisualizerConfig, npcConfig, playerName, String.format(scoreFormat, dataRegistry.getSince(since)));
+            String val = String.format(scoreFormat, playerScore.getValue());
+
+            spawnNPC(providerVisualizerConfig, npcConfig, playerName, val);
             sendTeamPacket(playerName);
         }
 

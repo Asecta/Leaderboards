@@ -8,6 +8,7 @@ import com.pandoaspen.leaderboards.config.LeaderboardConfig;
 import com.pandoaspen.leaderboards.providers.ProviderManager;
 import com.pandoaspen.leaderboards.utils.ConfigLoader;
 import com.pandoaspen.leaderboards.utils.Duration;
+import com.pandoaspen.leaderboards.utils.gsonadapter.ColoredStringAdapter;
 import com.pandoaspen.leaderboards.utils.gsonadapter.DurationTypeAdapter;
 import com.pandoaspen.leaderboards.utils.gsonadapter.LocationTypeAdapter;
 import com.pandoaspen.leaderboards.visualizer.VisualizerManager;
@@ -39,7 +40,11 @@ public class LeaderboardsPlugin extends JavaPlugin {
     }
 
     private void loadConfigs() {
-        Gson gson = new GsonBuilder().registerTypeAdapter(Location.class, new LocationTypeAdapter()).registerTypeAdapter(Duration.class, new DurationTypeAdapter()).setPrettyPrinting().create();
+        Gson gson = new GsonBuilder()
+                .registerTypeAdapter(String.class, new ColoredStringAdapter())
+                .registerTypeAdapter(Location.class, new LocationTypeAdapter())
+                .registerTypeAdapter(Duration.class, new DurationTypeAdapter())
+                .setPrettyPrinting().create();
         this.leaderboardConfig = ConfigLoader.load(this, gson, "config.yml", LeaderboardConfig.class);
     }
 

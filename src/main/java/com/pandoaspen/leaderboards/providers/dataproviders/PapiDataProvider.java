@@ -2,7 +2,8 @@ package com.pandoaspen.leaderboards.providers.dataproviders;
 
 import com.pandoaspen.leaderboards.config.providers.ProviderConfig;
 import com.pandoaspen.leaderboards.providers.registry.DataRegistry;
-import com.pandoaspen.leaderboards.utils.CollectionUtils;
+import com.pandoaspen.leaderboards.providers.registry.PlayerData;
+import com.pandoaspen.leaderboards.providers.registry.PlayerScore;
 import lombok.Getter;
 import me.clip.placeholderapi.PlaceholderAPI;
 import org.bukkit.OfflinePlayer;
@@ -11,7 +12,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.UUID;
 
 @Getter
@@ -24,12 +24,13 @@ public class PapiDataProvider extends AbstractProvider {
 
     private boolean available = false;
 
-    private TreeMap<UUID, DataRegistry> dataRegistryMap;
+    private DataRegistry dataRegistry;
 
     public PapiDataProvider(JavaPlugin plugin, ProviderConfig providerConfig) {
         super(plugin, providerConfig);
         this.name = providerConfig.getName();
         this.placeholder = providerConfig.getPlaceholder();
+        this.dataRegistry = new DataRegistry(plugin, getName());
     }
 
     public double parsePlaceholder(OfflinePlayer player) {
@@ -56,12 +57,12 @@ public class PapiDataProvider extends AbstractProvider {
 
     @Override
     public void load() throws IOException {
-        this.dataRegistryMap = new TreeMap<>(super.readData());
+        this.dataRegistry.load();
     }
 
     @Override
     public void save() throws IOException {
-        super.writeData(dataRegistryMap);
+        this.dataRegistry.save();
     }
 
     @Override
@@ -69,28 +70,27 @@ public class PapiDataProvider extends AbstractProvider {
         double data = parsePlaceholder(player);
         UUID uuid = player.getUniqueId();
         String lastName = player.getName();
-        DataRegistry playerData = dataRegistryMap.computeIfAbsent(uuid, x -> new DataRegistry(lastName));
-        playerData.register(data);
+        dataRegistry.addEntry(uuid, lastName, data);
     }
 
 
     @Override
-    public List<DataRegistry> getTop(long since, int limit) {
-        return CollectionUtils.resolveSort(dataRegistryMap.values(), d -> -d.getSince(System.currentTimeMillis() - since), v -> 0 < -v, limit);
+    public List<PlayerScore> getTop(long since, int limit) {
+        return dataRegistry.getTop(since, limit);
     }
 
     @Override
-    public DataRegistry getByIndex(long since, int index) {
-        return getTop(since, index + 1).get(index);
+    public PlayerScore getByIndex(long since, int index) {
+        return dataRegistry.getByIndex(since, index);
     }
 
     @Override
-    public DataRegistry getDataFor(UUID uuid) {
-        return dataRegistryMap.get(uuid);
+    public PlayerData getDataFor(UUID uuid) {
+        return dataRegistry.getDataFor(uuid);
     }
 
     @Override
-    public Map<UUID, DataRegistry> getDatabase() {
-        return dataRegistryMap;
+    public Map<UUID, PlayerData> getDatabase() {
+        return dataRegistry.getDatabase();
     }
 }
