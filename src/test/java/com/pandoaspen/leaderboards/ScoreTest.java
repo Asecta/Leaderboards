@@ -2,6 +2,7 @@ package com.pandoaspen.leaderboards;
 
 import lombok.Value;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -32,19 +33,22 @@ public class ScoreTest {
 
         long start = System.nanoTime();
         sortV1(randomNumbers, limit);
-        System.out.println(String.format("Took %.2fms", (System.nanoTime() - start) / 1e+6d));
+        System.out.println(String.format("V1 Took %.2fms", (System.nanoTime() - start) / 1e+6d));
 
         start = System.nanoTime();
         sortV2(randomNumbers, limit);
-        System.out.println(String.format("Took %.2fms", (System.nanoTime() - start) / 1e+6d));
+        System.out.println(String.format("V2 Took %.2fms", (System.nanoTime() - start) / 1e+6d));
+
+        Score[] copy = randomNumbers.clone();
 
         start = System.nanoTime();
-        sortV2(randomNumbers, limit);
-        System.out.println(String.format("Took %.2fms", (System.nanoTime() - start) / 1e+6d));
+        Arrays.sort(copy);
+        System.out.println(String.format("Standard Took %.2fms", (System.nanoTime() - start) / 1e+6d));
 
+        copy = randomNumbers.clone();
         start = System.nanoTime();
-        sortV1(randomNumbers, limit);
-        System.out.println(String.format("Took %.2fms", (System.nanoTime() - start) / 1e+6d));
+        Arrays.parallelSort(copy);
+        System.out.println(String.format("Parrallel %.2fms", (System.nanoTime() - start) / 1e+6d));
     }
 
     public static List<Score> sortV1(Score[] randomNumbers, int limit) {

@@ -10,4 +10,6 @@ public class ProviderVisualizerConfig {
     @SerializedName("show-since") private Duration duration;
     @SerializedName("title") private String title;
     @SerializedName("npc-title") private String npcTitle;
+    @SerializedName("rows") private int rows;
+    @SerializedName("row-format") private String rowFormat;
 }
