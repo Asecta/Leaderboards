@@ -7,15 +7,12 @@ data-providers:
     type: ASYNC_PAPI # Data provider source type
     placeholder: "%pvpstats_kills%"
 
-    # how often it will check for score changes for all online players
-    update-period: 1m
+    update-period: 10s # 10m
 
     # Standard java string format. the number indicates how many decimal places to use.
     # i.e 0 for kills, you would want "$%.2f" for money etc.
     score-format: "%.0f"
 
-    # Triggers that will cause it to update a player's score.
-    # The delay is there because it may take time for the plugin providing the placeholder to register
     update-triggers:
       - trigger-type: PLAYER_JOIN
         delay: 5s
@@ -23,88 +20,85 @@ data-providers:
       - trigger-type: PLAYER_KILL
         delay: 5s
 
-
 ##########################
 #### Data Visualizers ####
 ##########################
 
-visualizers: []
-#  - type: HOLOGRAM
-#
-#    location: world 13.5 172 0.5 0 0
-#
-#    rotate-period: 2s
-#
-#    providers:
-#      - name: pvpstats-kills
-#        show-since: 1m
-#        title: |-
-#          &aMinutely Kills
-#        row-format: "&e{rank}. &6{playername} &7- &e{score}"
-#        rows: 10
-#
-#      - name: pvpstats-kills
-#        show-since: 1d
-#        title: |-
-#          &aDaily Kills
-#        row-format: "&e{rank}. &6{playername} &7- &e{score}"
-#        rows: 10
-#
-#      - namle: pvpstats-kills
-#        show-since: 100w
-#        title: |-
-#          &aAll time kills
-#        row-format: "&e{rank}. &6{playername} &7- &e{score}"
-#        rows: 10
+visualizers:
+  - type: PLAYER
 
+    title:
+      enabled: true
+      location: world 35.5 172 0.5 0 0
 
-#  - type: PLAYER
-#
-#    title:
-#      enabled: true
-#      location: world 13.5 172 0.5 0 0
-#
-#
-#    providers:
-#      - name: pvpstats-kills
-#        show-since: 1m
-#        title: |-
-#          &0==============
-#          &aMinutely Kills
-#          &0==============
-#        npc-title: |-
-#          &e%rank%&a. &7%name%
-#          &e%value% &aKills
-#
-#      - name: pvpstats-kills
-#        show-since: 1d
-#        title: |-
-#          &0===========
-#          &aDaily Kills
-#          &0===========
-#        npc-title: |-
-#          &e%rank%&a. &7%name%
-#          &e%value% &aKills
-#
-#      - name: pvpstats-kills
-#        show-since: 100w
-#        title: |-
-#          &0==============
-#          &aAll time kills
-#          &0==============
-#        npc-title: |-
-#          &e%rank%&a. &7%name%
-#          &e%value% &aKills
-#
-#    rotate-period: 2s
-#
-#    watch-player: true
-#    watch-distance: 10
-#
-#    npcs:
-#      - location: world 15.5 171 .5 90 0 # world x y z yaw pitch
-#        rank: 1
-#      - location: world 13.5 170 3.5 90 0
-#        rank: 2
-#      - location: world 13.5 169 -2.5 90 0
-#        rank: 3
+    providers:
+      - name: pvpstats-kills
+        show-since: 1m
+        title: |-
+          &0==============
+          &aMinutely Kills
+          &0==============
+        npc-title: |-
+          &e%rank%&a. &7%name%
+          &e%value% &aKills
+
+      - name: pvpstats-kills
+        show-since: 1d
+        title: |-
+          &0===========
+          &aDaily Kills
+          &0===========
+        npc-title: |-
+          &e%rank%&a. &7%name%
+          &e%value% &aKills
+
+      - name: pvpstats-kills
+        show-since: 100w
+        title: |-
+          &0==============
+          &aAll time kills
+          &0==============
+        npc-title: |-
+          &e%rank%&a. &7%name%
+          &e%value% &aKills
+
+    rotate-period: 10s
+
+    watch-player: true
+    watch-distance: 10
+
+    npcs:
+      - location: world 37.5 171 .5 90 0 # world x y z yaw pitch
+        rank: 1
+      - location: world 35.5 170 3.5 90 0
+        rank: 2
+      - location: world 35.5 169 -2.5 90 0
+        rank: 3
+
+  - type: HOLOGRAM
+
+    location: world 33.5 172 8.5 0 0
+
+    rotate-period: 10s
+
+    providers:
+      - name: pvpstats-kills
+        show-since: 1m
+        title: |-
+          &aMinutely Kills
+        row-format: "&e{rank}. &6{playername} &7- &e{score}"
+        rows: 10
+
+      - name: pvpstats-kills
+        show-since: 1d
+        title: |-
+          &aDaily Kills
+        row-format: "&e{rank}. &6{playername} &7- &e{score}"
+        rows: 10
+
+      - name: pvpstats-kills
+        show-since: 100w
+        title: |-
+          &aAll time kills
+        row-format: "&e{rank}. &6{playername} &7- &e{score}"
+        rows: 10

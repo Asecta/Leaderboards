@@ -69,7 +69,7 @@ public abstract class JsonDataSerializer implements IDataSerializer {
         fileOutputStream.write(bytes);
         fileOutputStream.close();
 
-        writeBinary(data);
+//        writeBinary(data);
     }
 
     public void writeBinary(Map<UUID, PlayerData> data) throws IOException {
@@ -85,12 +85,10 @@ public abstract class JsonDataSerializer implements IDataSerializer {
         for (Map.Entry<UUID, PlayerData> entry : data.entrySet()) {
             UUID uuid = entry.getKey();
             PlayerData playerData = entry.getValue();
-
             out.writeLong(uuid.getLeastSignificantBits());
             out.writeLong(uuid.getMostSignificantBits());
             out.writeUTF(playerData.getPlayerName());
             out.writeInt(data.size());
-
             for (DataEntry dataEntry : playerData) {
                 out.writeLong(dataEntry.getTime());
                 out.writeDouble(dataEntry.getValue());

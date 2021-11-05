@@ -60,7 +60,6 @@ public class HologramVisualizer extends AbstractVisualizer {
         List<PlayerScore> top = dataProvider.getTop(since, max);
 
         hologram.clearLines();
-
         hologram.appendTextLine(providerVisualizerConfig.getTitle());
 
         String scoreFormat = dataProvider.getProviderConfig().getScoreFormat();
@@ -77,7 +76,7 @@ public class HologramVisualizer extends AbstractVisualizer {
 
         ProviderVisualizerConfig nextProviderConf = providerVisualizerConfigs.get(visualizerIndex);
         long nextTime = nextProviderConf.getDuration().getMillis();
-        //        getPlugin().getProviderManager().getProvider(nextProviderConf.getName()).prepareNextTop(nextTime, max);
+        getPlugin().getProviderManager().getProvider(nextProviderConf.getName()).prepareNextTop(nextTime, max);
     }
 
 

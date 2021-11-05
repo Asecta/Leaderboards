@@ -6,6 +6,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 
 public class DataRegistry extends JsonDataSerializer {
@@ -35,6 +36,10 @@ public class DataRegistry extends JsonDataSerializer {
         if (value == 0) return;
 
         if (dataEntries.isEmpty()) {
+            if (value > 5) {
+                currentTime = currentTime - TimeUnit.DAYS.toMillis(364);
+            }
+
             dataEntries.add(new DataEntry(currentTime, value));
             return;
         }
@@ -108,51 +113,7 @@ public class DataRegistry extends JsonDataSerializer {
         }
 
 
-
         return Arrays.asList(result);
-
-        //        List<PlayerScore> result = new ArrayList<PlayerScore>() {
-        //            public boolean add(PlayerScore mt) {
-        //                int index = Collections.binarySearch(this, mt);
-        //                if (index < 0) index = ~index;
-        //                super.add(index, mt);
-        //                return true;
-        //            }
-        //        };
-        //
-        //        double minAccept = 0;
-        //        boolean accepting = false;
-        //        int count = 0;
-        //        for (Map.Entry<UUID, PlayerData> entry : dataRegistryMap.entrySet()) {
-        //            if (entry.getValue().isEmpty()) continue;
-        //            PlayerScore score = getScore(entry.getKey(), entry.getValue(), epoch);
-        //            if (score == null) continue;
-        //
-        //            if (!accepting) {
-        //                result.add(score);
-        //                if (count++ == limit){
-        //                    minAccept = result.get(limit).getValue();
-        //                    accepting = true;
-        //                }
-        //                continue;
-        //            }
-        //
-        //            if (score.getValue() > minAccept) {
-        //                result.add(score);
-        //                result.remove(limit + 1);
-        //                minAccept = result.get(limit).getValue();
-        //            }
-        //        }
-        //        return result;
-
-
-        //                return dataRegistryMap.entrySet().parallelStream()
-        //                        .filter(entry -> !entry.getValue().isEmpty())
-        //                        .map(entry -> getScore(entry.getKey(), entry.getValue(), epoch))
-        //                        .filter(Objects::nonNull)
-        //                        .sorted()
-        //                        .limit(limit)
-        //                        .collect(Collectors.toList());
     }
 
     public PlayerScore getByIndex(long since, int index) {

@@ -5,8 +5,12 @@ import co.aikar.commands.annotation.CommandAlias;
 import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Subcommand;
 import com.pandoaspen.leaderboards.LeaderboardsPlugin;
+import com.pandoaspen.leaderboards.providers.dataproviders.IDataProvider;
 import lombok.RequiredArgsConstructor;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
+
+import java.util.concurrent.atomic.AtomicInteger;
 
 @RequiredArgsConstructor
 @CommandAlias("lb|leaderboard")
@@ -17,8 +21,9 @@ public class LeaderboardCommand extends BaseCommand {
 
 
     @Subcommand("reload")
-    public void cmdVisualizer(Player sender) {
-
+    public void cmdReload(Player sender) {
+        plugin.onDisable();
+        plugin.onEnable();
     }
 
     //    @Subcommand("visualizer")
@@ -67,37 +72,38 @@ public class LeaderboardCommand extends BaseCommand {
     //    }
     //
     //    @Subcommand("offline")
-    //    public void offlineCollect(Player sender, String providerName) {
-    //        IDataProvider provider = plugin.getProviderManager().getProvider(providerName);
-    //
-    //        if (provider == null) {
-    //            sender.sendMessage("That provider couldnt be found");
-    //            return;
-    //        }
-    //
-    //        OfflinePlayer[] offlinePlayers = plugin.getServer().getOfflinePlayers();
-    //
-    //
-    //        sender.sendMessage("Attempting offline collection of " + offlinePlayers.length + " players...");
-    //
-    //        double length = offlinePlayers.length;
-    //
-    //        AtomicInteger progress = new AtomicInteger(0);
-    //
-    //        for (int i = 0; i < offlinePlayers.length; i++) {
-    //            int finalI = i;
-    //            OfflinePlayer offlinePlayer = offlinePlayers[finalI];
-    //
-    //            try {
-    //                provider.collectData(offlinePlayer);
-    //            } catch (Throwable e) {
-    //                e.printStackTrace();
-    //            }
-    //
-    //            double percent = progress.incrementAndGet() / length * 100d;
-    //            sender.sendMessage(String.format("Collecting.. %.2f%% Complete", percent));
-    //        }
-    //
-    //        sender.sendMessage("Done");
-    //    }
+    public void offlineCollect(Player sender, String providerName) {
+        IDataProvider provider = plugin.getProviderManager().getProvider(providerName);
+
+        if (provider == null) {
+            sender.sendMessage("That provider couldnt be found");
+            return;
+        }
+
+
+        OfflinePlayer[] offlinePlayers = plugin.getServer().getOfflinePlayers();
+
+
+        sender.sendMessage("Attempting offline collection of " + offlinePlayers.length + " players...");
+
+        double length = offlinePlayers.length;
+
+        AtomicInteger progress = new AtomicInteger(0);
+
+        for (int i = 0; i < offlinePlayers.length; i++) {
+            int finalI = i;
+            OfflinePlayer offlinePlayer = offlinePlayers[finalI];
+
+            try {
+                provider.collectData(offlinePlayer);
+            } catch (Throwable e) {
+                e.printStackTrace();
+            }
+
+            double percent = progress.incrementAndGet() / length * 100d;
+            sender.sendMessage(String.format("Collecting.. %.2f%% Complete", percent));
+        }
+
+        sender.sendMessage("Done");
+    }
 }

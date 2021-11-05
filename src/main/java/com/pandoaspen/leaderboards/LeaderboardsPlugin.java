@@ -14,6 +14,7 @@ import com.pandoaspen.leaderboards.utils.gsonadapter.LocationTypeAdapter;
 import com.pandoaspen.leaderboards.visualizer.VisualizerManager;
 import lombok.Getter;
 import org.bukkit.Location;
+import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class LeaderboardsPlugin extends JavaPlugin {
@@ -37,6 +38,8 @@ public class LeaderboardsPlugin extends JavaPlugin {
     public void onDisable() {
         providerManager.saveProviders();
         visualizerManager.shutdown();
+        HandlerList.unregisterAll(this);
+        getServer().getScheduler().cancelTasks(this);
     }
 
     private void loadConfigs() {

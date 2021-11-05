@@ -36,10 +36,14 @@ public class PapiDataProvider extends AbstractProvider {
     public double parsePlaceholder(OfflinePlayer player) {
         String placeholder = getPlaceholder();
         double data = 0;
+        String dataStr = null;
         try {
-            data = Double.parseDouble(PlaceholderAPI.setPlaceholders(player, placeholder));
+            dataStr = PlaceholderAPI.setPlaceholders(player, placeholder);
+            dataStr = dataStr.replaceAll(",", "");
+            data = Double.parseDouble(dataStr);
         } catch (Exception e) {
-            e.printStackTrace();
+            String msg = "Could not parse placeholder for %s: Invalid value: %s";
+            getPlugin().getLogger().fine(String.format(msg, getName(), dataStr == null ? "null" : dataStr));
         }
         return data;
     }

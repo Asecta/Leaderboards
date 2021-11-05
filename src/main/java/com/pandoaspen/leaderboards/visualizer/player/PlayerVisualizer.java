@@ -1,9 +1,7 @@
 package com.pandoaspen.leaderboards.visualizer.player;
 
-import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.ProtocolManager;
-import com.comphenix.protocol.events.PacketContainer;
 import com.gmail.filoghost.holographicdisplays.api.Hologram;
 import com.gmail.filoghost.holographicdisplays.api.HologramsAPI;
 import com.pandoaspen.leaderboards.LeaderboardsPlugin;
@@ -18,17 +16,16 @@ import net.citizensnpcs.api.event.DespawnReason;
 import net.citizensnpcs.api.npc.MemoryNPCDataStore;
 import net.citizensnpcs.api.npc.NPC;
 import net.citizensnpcs.api.npc.NPCRegistry;
-import net.citizensnpcs.trait.HologramTrait;
 import net.citizensnpcs.trait.LookClose;
 import net.citizensnpcs.trait.ScoreboardTrait;
+import net.citizensnpcs.trait.SkinTrait;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.entity.EntityType;
 import org.bukkit.scoreboard.Team;
 
-import java.util.Arrays;
-import java.util.Collection;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -44,6 +41,8 @@ public class PlayerVisualizer extends AbstractVisualizer {
     private long nextRunTime;
 
     private Hologram titleHologram;
+
+    List<Hologram> holograms = new ArrayList<>();
 
     private List<ProviderVisualizerConfig> providerVisualizerConfigs;
     int visualizerIndex = 0;
@@ -71,6 +70,8 @@ public class PlayerVisualizer extends AbstractVisualizer {
         npcRegistry.deregisterAll();
         npcRegistry.despawnNPCs(DespawnReason.PLUGIN);
         titleHologram.delete();
+        holograms.forEach(Hologram::delete);
+        holograms.clear();
     }
 
     @Override
@@ -85,12 +86,13 @@ public class PlayerVisualizer extends AbstractVisualizer {
         npcRegistry.despawnNPCs(DespawnReason.PLUGIN);
         nametagTeam.getEntries().forEach(nametagTeam::removeEntry);
 
-        spawnHologram(providerVisualizerConfig);
+        spawnTitleHologram(providerVisualizerConfig);
+
+        holograms.forEach(Hologram::delete);
+        holograms.clear();
 
         long since = providerVisualizerConfig.getDuration().getMillis();
         int max = getVisualizerConfig().getNpcs().stream().mapToInt(v -> v.getRank()).max().getAsInt() + 1;
-
-        long start = System.nanoTime();
 
         IDataProvider dataProvider = getPlugin().getProviderManager().getProvider(providerVisualizerConfig.getName());
 
@@ -101,22 +103,25 @@ public class PlayerVisualizer extends AbstractVisualizer {
 
         List<PlayerScore> top = dataProvider.getTop(since, max);
 
-        double timediff = (System.nanoTime() - start) / 1000000d;
-        int dpCount = dataProvider.getDatabase().values().stream().mapToInt(d -> d.getDataEntries().size()).sum();
-        Bukkit.broadcastMessage(String.format("Took %.4f ms to update (%d) (%s) (%s)", timediff, dpCount, dataProvider.getName(), providerVisualizerConfig.getDuration().getDurationString()));
-
         String scoreFormat = dataProvider.getProviderConfig().getScoreFormat();
+
+        int npcConfIndex = 0;
 
         for (NPCConfig npcConfig : getVisualizerConfig().getNpcs()) {
             if (npcConfig.getRank() > top.size()) continue;
 
             PlayerScore playerScore = top.get(npcConfig.getRank() - 1);
-            String playerName = playerScore.getName();
 
             String val = String.format(scoreFormat, playerScore.getValue());
+            npcConfIndex++;
 
-            spawnNPC(providerVisualizerConfig, npcConfig, playerName, val);
-            sendTeamPacket(playerName);
+            int finalNpcConfIndex = npcConfIndex;
+            getPlugin().getServer().getScheduler().runTaskLater(getPlugin(), () -> {
+                spawnNPCHologram(providerVisualizerConfig, npcConfig, playerScore, val, finalNpcConfIndex);
+                spawnNPC(providerVisualizerConfig, npcConfig, playerScore, val);
+            }, npcConfIndex * 3);
+
+
         }
 
         ProviderVisualizerConfig nextProviderConf = providerVisualizerConfigs.get(visualizerIndex);
@@ -124,7 +129,7 @@ public class PlayerVisualizer extends AbstractVisualizer {
         getPlugin().getProviderManager().getProvider(nextProviderConf.getName()).prepareNextTop(nextTime, max);
     }
 
-    private void spawnHologram(ProviderVisualizerConfig providerVisualizerConfig) {
+    private void spawnTitleHologram(ProviderVisualizerConfig providerVisualizerConfig) {
         if (getVisualizerConfig().getTitle().isEnabled()) {
             titleHologram.clearLines();
             for (String line : providerVisualizerConfig.getTitle().split("[\r\n]")) {
@@ -134,38 +139,51 @@ public class PlayerVisualizer extends AbstractVisualizer {
         }
     }
 
-    private void spawnNPC(ProviderVisualizerConfig providerVisualizerConfig, NPCConfig npcConfig, String playerName, String value) {
-        NPC npc = npcRegistry.createNPC(EntityType.PLAYER, playerName);
+    private void spawnNPCHologram(ProviderVisualizerConfig providerVisualizerConfig, NPCConfig npcConfig, PlayerScore playerScore, String value, int index) {
 
-        HologramTrait hologramTrait = npc.getOrAddTrait(HologramTrait.class);
+        getPlugin().getServer().getScheduler().runTaskLater(getPlugin(), () -> {
+            Location hologramLocation = npcConfig.getLocation().clone();
+            hologramLocation.add(0, 2.5, 0);
 
-        npc.spawn(npcConfig.getLocation());
+            Hologram hologram = HologramsAPI.createHologram(getPlugin(), hologramLocation);
+            holograms.add(hologram);
 
-        String[] lines = providerVisualizerConfig.getNpcTitle().split("\n");
-        for (int i = lines.length - 1; i >= 0; i--) {
-            String line = lines[i];
-            line = line.replaceAll("%rank%", Integer.toString(npcConfig.getRank()));
-            line = line.replaceAll("%name%", playerName);
-            line = line.replaceAll("%value%", value);
-            line = ChatColor.translateAlternateColorCodes('&', line);
-            hologramTrait.addLine(line);
-        }
+            String name = playerScore.getName();
+
+            if (name == null || name.trim().isEmpty()) {
+                name = "Not Found";
+            }
+
+            String[] lines = providerVisualizerConfig.getNpcTitle().split("\n");
+            for (int i = lines.length - 1; i >= 0; i--) {
+                String line = lines[i];
+                line = line.replaceAll("%rank%", Integer.toString(npcConfig.getRank()));
+                line = line.replaceAll("%name%", name);
+                line = line.replaceAll("%value%", value);
+                line = ChatColor.translateAlternateColorCodes('&', line);
+                hologram.appendTextLine(line);
+            }
+        }, 1);
+    }
+
+    private void spawnNPC(ProviderVisualizerConfig providerVisualizerConfig, NPCConfig npcConfig, PlayerScore playerScore, String value) {
+        NPC npc = npcRegistry.createNPC(EntityType.PLAYER, "LB_NPC");
+
+        npc.spawn(npcConfig.getLocation().clone());
+
+        SkinTrait skinTrait = npc.getOrAddTrait(SkinTrait.class);
+        skinTrait.setSkinName(playerScore.getName(), false);
 
         LookClose lookCloseTrait = npc.getOrAddTrait(LookClose.class);
         lookCloseTrait.lookClose(true);
         lookCloseTrait.setRealisticLooking(true);
         lookCloseTrait.setRange(getVisualizerConfig().getWatchDistance());
 
-        ScoreboardTrait scoreboardTrait = npc.getOrAddTrait(ScoreboardTrait.class);
-        this.nametagTeam.addEntry(playerName);
-        scoreboardTrait.apply(this.nametagTeam, false);
-    }
+        if (npc.getEntity() != null) {
+            ScoreboardTrait scoreboardTrait = npc.getOrAddTrait(ScoreboardTrait.class);
+            this.nametagTeam.addEntry("LB_NPC");
+            scoreboardTrait.apply(this.nametagTeam, false);
+        }
 
-    private void sendTeamPacket(String playerName) {
-        PacketContainer packetContainer = protocolManager.createPacket(PacketType.Play.Server.SCOREBOARD_TEAM);
-        packetContainer.getIntegers().write(1, 3);
-        packetContainer.getStrings().write(0, "nametagHide");
-        packetContainer.getSpecificModifier(Collection.class).write(0, Arrays.asList(playerName));
-        protocolManager.broadcastServerPacket(packetContainer);
     }
 }

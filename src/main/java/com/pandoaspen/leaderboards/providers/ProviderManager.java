@@ -54,6 +54,11 @@ public class ProviderManager {
         }
     }
 
+    public void shutdown() {
+        saveProviders();
+
+    }
+
     public void saveProviders() {
         for (IDataProvider dataProvider : dataProviders) {
             try {
